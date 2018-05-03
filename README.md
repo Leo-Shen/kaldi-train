@@ -6,10 +6,19 @@
     4. 由于原生的mini_lirispeech训练脚本，对wav文件的要求是全数字，如果现在想支持包含字母的文件，则需把相关脚本上数字值比较的判断逻辑修改字符串比较的判断逻辑。
 
 数据准备：
-1. find train-clean-5/ -name *.wav -> train_wav_files.txt #收集训练集的语料
-   find dev-clean-2/ -name *.wav -> dev_wav_files.txt #收集测试集的语料
+1. find train-clean-5/ -name *.wav > train_wav_files.txt #收集训练集的语料
+   find dev-clean-2/ -name *.wav > dev_wav_files.txt #收集测试集的语料
 
 2. python rename_moban_wav.py train_wav_files.txt #把训练集的语料重命名，分文件夹，为每个文件夹生成trans.txt。
    python rename_moban_wav.py test_wav_files.txt #把测试集的语料重命名，分文件夹，为每个文件夹生成trans.txt。
 
 3. ./run.sh #开始训练
+
+生成语言模型
+1. find train-clean-5/ -name *.trans.txt > trans_files.txt #合并所有train-clean-5目录下的trans.txt文件
+2. python combine_train_txt.py trans_files.txt trans.txt #提取所有trans_files.txt中所列文件中的内容到trans.txt中
+3. python split2words.py trans.txt > word.txt #提取trans.txt中的单词
+4. cat word.txt | sort -u | uniq > word_uniq.txt #对单词唯一并排序
+5. python filter_lexicon.py lexicon_full.txt word_uniq.txt lexicon.txt #从大的发音字典中提取指定单词集的发音字典
+6. cp word.txt corpus_moban.txt #把word.txt中单词的出现频率当作生成语言模型的参考文本
+7. ./make_librispeech_graph.sh #生成HCLG.fst
